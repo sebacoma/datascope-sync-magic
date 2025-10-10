@@ -1,1 +1,4 @@
-project_id = "zhudmyalfsnipaqnuuqu"
+project_id = "zhiwa-5e-4a8-84-68-656-0005d-9"
+
+[functions.receive-equipment-data]
+verify_jwt = false
