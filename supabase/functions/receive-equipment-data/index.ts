@@ -18,50 +18,19 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get data from Google Apps Script
+    // Get batch data from Google Apps Script
     const requestData = await req.json()
     
-    console.log('Received data from Google Apps Script:', requestData)
+    console.log('Received batch from Google Apps Script:', {
+      sheet: requestData.sheet,
+      rowCount: requestData.rows?.length || 0
+    })
 
-    // Transform data to match database schema
-    const equipmentData = {
-      created: requestData.created ? new Date(requestData.created) : null,
-      sent: requestData.sent ? new Date(requestData.sent) : null,
-      form_id: requestData.form_id,
-      form_name: requestData.form_name,
-      user_name: requestData.user,
-      assigned_date: requestData.assigned_date ? new Date(requestData.assigned_date) : null,
-      assigned_time: requestData.assigned_time || null,
-      assigned_location: requestData.assigned_location,
-      assigned_location_code: requestData.assigned_location_code,
-      first_answer: requestData.first_answer ? new Date(requestData.first_answer) : null,
-      last_answer: requestData.last_answer ? new Date(requestData.last_answer) : null,
-      minutes_to_perform: requestData.minutes_to_perform ? parseInt(requestData.minutes_to_perform) : null,
-      latitude: requestData.latitude ? parseFloat(requestData.latitude) : null,
-      longitude: requestData.longitude ? parseFloat(requestData.longitude) : null,
-      zona_cliente: requestData['Zona - Pole'],
-      ejecutado_por: requestData['Ejecutado por'],
-      tipo_equipo: requestData['Tipo - Equipo'],
-      numero_equipo_tag: requestData['Numero - Equipo (Tag)'] || requestData.tag,
-      marca_modelo: requestData['Marca - Modelo'],
-      otro_cliente: requestData['Otro - Cliente'],
-      servicio: requestData.servicio,
-    }
-
-    console.log('Transformed data:', equipmentData)
-
-    // Insert or update in the database (upsert on tag + date)
-    const { data, error } = await supabaseClient
-      .from('chesterton_equipment')
-      .upsert(equipmentData, {
-        onConflict: 'numero_equipo_tag,assigned_date'
-      })
-      .select()
-
-    if (error) {
-      console.error('Database error:', error)
+    // Process batch of rows
+    const rows = requestData.rows || []
+    if (!Array.isArray(rows) || rows.length === 0) {
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: 'No rows provided in batch' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -69,13 +38,80 @@ serve(async (req) => {
       )
     }
 
-    console.log('Data saved successfully:', data)
+    const results = []
+    const errors = []
+
+    for (const row of rows) {
+      try {
+        const rowData = row.data || {}
+        
+        // Transform data to match database schema
+        const equipmentData = {
+          created: rowData.created ? new Date(rowData.created) : null,
+          sent: rowData.sent ? new Date(rowData.sent) : null,
+          form_id: rowData.form_id,
+          form_name: rowData.form_name,
+          user_name: rowData.user,
+          assigned_date: rowData.assigned_date ? new Date(rowData.assigned_date) : null,
+          assigned_time: rowData.assigned_time || null,
+          assigned_location: rowData.assigned_location,
+          assigned_location_code: rowData.assigned_location_code,
+          first_answer: rowData.first_answer ? new Date(rowData.first_answer) : null,
+          last_answer: rowData.last_answer ? new Date(rowData.last_answer) : null,
+          minutes_to_perform: rowData.minutes_to_perform ? parseInt(rowData.minutes_to_perform) : null,
+          latitude: rowData.latitude ? parseFloat(rowData.latitude) : null,
+          longitude: rowData.longitude ? parseFloat(rowData.longitude) : null,
+          zona_cliente: rowData['Zona - Cliente'],
+          ejecutado_por: rowData['Ejecutado por'],
+          tipo_equipo: rowData['Tipo de Equipo'],
+          numero_equipo_tag: rowData['Numero de Equipo (Tag)'] || rowData['Numero del Equipo'] || row.tag,
+          marca_modelo: rowData['Marca - Modelo'] || rowData['Marca'],
+          otro_cliente: rowData['Otro - Cliente'],
+          servicio: rowData['Servicio'],
+        }
+
+        console.log(`Processing row ${row.rowNumber}:`, equipmentData)
+
+        // Insert or update in the database
+        const { data, error } = await supabaseClient
+          .from('chesterton_equipment')
+          .upsert(equipmentData, {
+            onConflict: 'numero_equipo_tag,assigned_date'
+          })
+          .select()
+
+        if (error) {
+          console.error(`Error on row ${row.rowNumber}:`, error)
+          errors.push({
+            rowNumber: row.rowNumber,
+            error: error.message
+          })
+        } else {
+          results.push({
+            rowNumber: row.rowNumber,
+            data: data
+          })
+        }
+      } catch (rowError) {
+        const errorMessage = rowError instanceof Error ? rowError.message : 'Unknown error'
+        console.error(`Exception on row ${row.rowNumber}:`, rowError)
+        errors.push({
+          rowNumber: row.rowNumber,
+          error: errorMessage
+        })
+      }
+    }
+
+    console.log(`Batch processed: ${results.length} success, ${errors.length} errors`)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Equipment data received and saved',
-        data: data
+        message: `Processed ${rows.length} rows`,
+        processed: results.length,
+        errors: errors.length,
+        results: results,
+        errorDetails: errors
       }),
       { 
         status: 200,
