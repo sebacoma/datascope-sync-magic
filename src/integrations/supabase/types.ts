@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chesterton_equipment: {
+        Row: {
+          assigned_date: string | null
+          assigned_location: string | null
+          assigned_location_code: string | null
+          assigned_time: string | null
+          created: string | null
+          created_at: string
+          ejecutado_por: string | null
+          first_answer: string | null
+          form_id: string | null
+          form_name: string | null
+          id: string
+          last_answer: string | null
+          latitude: number | null
+          longitude: number | null
+          marca_modelo: string | null
+          minutes_to_perform: number | null
+          numero_equipo_tag: string
+          otro_cliente: string | null
+          sent: string | null
+          servicio: string | null
+          tipo_equipo: string | null
+          updated_at: string
+          user_name: string | null
+          zona_cliente: string | null
+        }
+        Insert: {
+          assigned_date?: string | null
+          assigned_location?: string | null
+          assigned_location_code?: string | null
+          assigned_time?: string | null
+          created?: string | null
+          created_at?: string
+          ejecutado_por?: string | null
+          first_answer?: string | null
+          form_id?: string | null
+          form_name?: string | null
+          id?: string
+          last_answer?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          marca_modelo?: string | null
+          minutes_to_perform?: number | null
+          numero_equipo_tag: string
+          otro_cliente?: string | null
+          sent?: string | null
+          servicio?: string | null
+          tipo_equipo?: string | null
+          updated_at?: string
+          user_name?: string | null
+          zona_cliente?: string | null
+        }
+        Update: {
+          assigned_date?: string | null
+          assigned_location?: string | null
+          assigned_location_code?: string | null
+          assigned_time?: string | null
+          created?: string | null
+          created_at?: string
+          ejecutado_por?: string | null
+          first_answer?: string | null
+          form_id?: string | null
+          form_name?: string | null
+          id?: string
+          last_answer?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          marca_modelo?: string | null
+          minutes_to_perform?: number | null
+          numero_equipo_tag?: string
+          otro_cliente?: string | null
+          sent?: string | null
+          servicio?: string | null
+          tipo_equipo?: string | null
+          updated_at?: string
+          user_name?: string | null
+          zona_cliente?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
