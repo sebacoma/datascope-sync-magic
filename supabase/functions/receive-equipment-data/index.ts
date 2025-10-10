@@ -45,6 +45,22 @@ serve(async (req) => {
       try {
         const rowData = row.data || {}
         
+        // Extract tag from multiple possible fields
+        const numero_equipo_tag = rowData['Numero de Equipo (Tag)'] || 
+                                  rowData['Numero del Equipo'] || 
+                                  row.tag || 
+                                  null
+        
+        // Validate required field
+        if (!numero_equipo_tag || String(numero_equipo_tag).trim() === '') {
+          console.warn(`Row ${row.rowNumber}: Missing required field 'numero_equipo_tag'`)
+          errors.push({
+            rowNumber: row.rowNumber,
+            error: 'Missing required field: numero_equipo_tag (Tag del equipo)'
+          })
+          continue
+        }
+        
         // Transform data to match database schema
         const equipmentData = {
           created: rowData.created ? new Date(rowData.created) : null,
@@ -64,7 +80,7 @@ serve(async (req) => {
           zona_cliente: rowData['Zona - Cliente'],
           ejecutado_por: rowData['Ejecutado por'],
           tipo_equipo: rowData['Tipo de Equipo'],
-          numero_equipo_tag: rowData['Numero de Equipo (Tag)'] || rowData['Numero del Equipo'] || row.tag,
+          numero_equipo_tag: String(numero_equipo_tag).trim(),
           marca_modelo: rowData['Marca - Modelo'] || rowData['Marca'],
           otro_cliente: rowData['Otro - Cliente'],
           servicio: rowData['Servicio'],
