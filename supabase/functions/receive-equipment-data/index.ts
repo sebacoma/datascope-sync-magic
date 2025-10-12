@@ -6,6 +6,71 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const DATASCOPE_API_URL = 'https://www.mydatascope.com/api/external'
+const DATASCOPE_METADATA_TYPE = 'chesterton_equipos' // Lista de equipos en DataScope
+
+// Función para verificar si un TAG existe en DataScope
+async function checkTagInDataScope(tag: string, apiKey: string): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `${DATASCOPE_API_URL}/metadata_objects?metadata_type=${DATASCOPE_METADATA_TYPE}`,
+      {
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+        }
+      }
+    )
+    
+    if (!response.ok) {
+      console.error('Error checking DataScope:', await response.text())
+      return false
+    }
+    
+    const data = await response.json()
+    return data.some((item: any) => item.code === tag || item.name === tag)
+  } catch (error) {
+    console.error('Exception checking DataScope:', error)
+    return false
+  }
+}
+
+// Función para crear un TAG en DataScope
+async function createTagInDataScope(tag: string, area: string, tipoEquipo: string, numeroEquipo: string, apiKey: string): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `${DATASCOPE_API_URL}/metadata_object?metadata_type=${DATASCOPE_METADATA_TYPE}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          list_object: {
+            code: tag,
+            name: tag,
+            description: `Equipo: ${tipoEquipo} - ${numeroEquipo}`,
+            attribute1: area,
+            attribute2: tipoEquipo
+          }
+        })
+      }
+    )
+    
+    if (!response.ok) {
+      console.error('Error creating in DataScope:', await response.text())
+      return false
+    }
+    
+    console.log(`TAG ${tag} created successfully in DataScope`)
+    return true
+  } catch (error) {
+    console.error('Exception creating in DataScope:', error)
+    return false
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -17,6 +82,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    const datascopeApiKey = Deno.env.get('DATASCOPE_API_KEY')
+    if (!datascopeApiKey) {
+      console.warn('DATASCOPE_API_KEY not configured, skipping DataScope sync')
+    }
 
     // Get batch data from Google Apps Script
     const requestData = await req.json()
@@ -108,6 +178,24 @@ serve(async (req) => {
             error: error.message
           })
         } else {
+          // Sync with DataScope if API key is available
+          if (datascopeApiKey && numero_equipo_tag) {
+            const existsInDataScope = await checkTagInDataScope(numero_equipo_tag, datascopeApiKey)
+            
+            if (!existsInDataScope) {
+              console.log(`TAG ${numero_equipo_tag} not found in DataScope, creating...`)
+              await createTagInDataScope(
+                numero_equipo_tag,
+                area,
+                tipoEquipo,
+                numeroEquipo,
+                datascopeApiKey
+              )
+            } else {
+              console.log(`TAG ${numero_equipo_tag} already exists in DataScope`)
+            }
+          }
+          
           results.push({
             rowNumber: row.rowNumber,
             data: data
