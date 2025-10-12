@@ -45,11 +45,16 @@ serve(async (req) => {
       try {
         const rowData = row.data || {}
         
-        // Extract tag from multiple possible fields
-        const numero_equipo_tag = rowData['Numero de Equipo (Tag)'] || 
-                                  rowData['Numero del Equipo'] || 
-                                  row.tag || 
-                                  null
+        // Construct TAG from Area + Tipo de Equipo + Numero de Equipo
+        const area = rowData['Area'] || ''
+        const tipoEquipo = rowData['Tipo de Equipo'] || ''
+        const numeroEquipo = rowData['Numero del Equipo'] || rowData['Numero de Equipo (Tag)'] || ''
+        
+        // Build the TAG: Area-TipoDeEquipo-NumeroDeEquipo
+        const numero_equipo_tag = [area, tipoEquipo, numeroEquipo]
+          .filter(part => part && String(part).trim() !== '')
+          .join('-')
+          .trim() || null
         
         // Validate required field
         if (!numero_equipo_tag || String(numero_equipo_tag).trim() === '') {
