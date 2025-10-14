@@ -35,9 +35,9 @@ export default async function handler(req: any, res: any) {
       try {
         const data = row.data || {}
         
-        // Get required field (try multiple variations)
+        // Get equipment tag (try multiple variations, generate fallback if needed)
         let numero_equipo_tag = data['Numero de Equipo (Tag)'] || 
-                               data['Numero de Equipo'] ||
+                               data['Numero del Equipo'] ||
                                data['Tag'] ||
                                data.tag ||
                                row.tag
@@ -47,15 +47,10 @@ export default async function handler(req: any, res: any) {
           numero_equipo_tag = numero_equipo_tag.trim() || null
         }
         
+        // Generate fallback tag if missing
         if (!numero_equipo_tag) {
-          errors++
-          const availableFields = Object.keys(data).join(', ')
-          results.push({ 
-            rowNumber: row.rowNumber, 
-            error: 'Missing equipment tag',
-            debug: { availableFields, rowData: data }
-          })
-          continue
+          const timestamp = new Date().getTime()
+          numero_equipo_tag = `AUTO-${row.rowNumber || timestamp}`
         }
 
         // Prepare equipment data
