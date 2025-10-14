@@ -35,12 +35,21 @@ export default async function handler(req: any, res: any) {
       try {
         const data = row.data || {}
         
-        // Get required field
-        const numero_equipo_tag = data['Numero de Equipo (Tag)'] || row.tag
+        // Get required field (try multiple variations)
+        const numero_equipo_tag = data['Numero de Equipo (Tag)'] || 
+                                 data['Numero de Equipo'] ||
+                                 data['Tag'] ||
+                                 data.tag ||
+                                 row.tag
         
         if (!numero_equipo_tag) {
           errors++
-          results.push({ rowNumber: row.rowNumber, error: 'Missing equipment tag' })
+          const availableFields = Object.keys(data).join(', ')
+          results.push({ 
+            rowNumber: row.rowNumber, 
+            error: 'Missing equipment tag',
+            debug: { availableFields, rowData: data }
+          })
           continue
         }
 
