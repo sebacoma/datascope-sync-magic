@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { createDataScopeService } from '../../lib/datascope'
+import { createDataScopeService } from '../../lib/datascope.js'
 
 const prisma = new PrismaClient()
 

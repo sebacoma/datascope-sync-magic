@@ -1,4 +1,4 @@
-import { createDataScopeService } from '../lib/datascope'
+import { createDataScopeService } from '../lib/datascope.js'
 
 interface VercelRequest {
   method: string
