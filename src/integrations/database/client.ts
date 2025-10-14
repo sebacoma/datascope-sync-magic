@@ -1,5 +1,9 @@
 // API client to replace Supabase integration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+// Custom API client for our PostgreSQL backend
+// In production, this will use Vercel's domain automatically
+const BASE_URL = typeof window !== 'undefined' 
+  ? window.location.origin 
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001')
 
 export interface Equipment {
   id: number
@@ -46,42 +50,46 @@ export interface BatchResponse {
 
 export const apiClient = {
   async getEquipment(): Promise<Equipment[]> {
-    const response = await fetch(`${API_BASE_URL}/api/equipment`)
+    const response = await fetch(`${BASE_URL}/api/equipment`)
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`Failed to fetch equipment: ${response.status}`)
     }
-    const data = await response.json()
-    return data || []
+    
+    return response.json()
   },
 
-  async createEquipmentBatch(data: { 
-    sheet: string; 
+  async createEquipmentBatch(data: {
+    sheet: string
+    timezone: string
     rows: Array<{
       rowNumber: number
       data: Record<string, unknown>
-      tag?: string
+      tag: string
     }>
-  }): Promise<BatchResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/equipment/batch`, {
+  }): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${BASE_URL}/api/equipment/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data)
     })
-    
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`Failed to create equipment batch: ${response.status}`)
     }
-    
+
     return response.json()
   },
 
-  async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    const response = await fetch(`${API_BASE_URL}/api/health`)
+  async healthCheck(): Promise<{ status: string }> {
+    const response = await fetch(`${BASE_URL}/api/health`)
+    
     if (!response.ok) {
-      throw new Error(`Health check failed! status: ${response.status}`)
+      throw new Error(`Health check failed: ${response.status}`)
     }
+    
     return response.json()
   }
 }
