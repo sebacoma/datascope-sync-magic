@@ -57,7 +57,7 @@ export default async function handler(req: any, res: any) {
         const equipmentData = {
           created: data.created ? new Date(data.created) : null,
           sent: data.sent ? new Date(data.sent) : null,
-          form_id: data.form_id || null,
+          form_id: data.form_id ? String(data.form_id) : null,
           form_name: data.form_name || null,
           user_name: data.user || null,
           assigned_date: data.assigned_date ? new Date(data.assigned_date) : null,
