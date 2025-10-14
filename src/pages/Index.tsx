@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient, Equipment } from "@/integrations/database/client";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
@@ -12,28 +12,22 @@ const Index = () => {
   const [clientFilter, setClientFilter] = useState("all");
   const {
     data: equipment,
-    isLoading
+    isLoading,
+    error
   } = useQuery({
     queryKey: ['chesterton-equipment'],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('chesterton_equipment').select('*').order('created_at', {
-        ascending: false
-      });
-      if (error) throw error;
-      return data;
-    }
+    queryFn: () => apiClient.getEquipment()
   });
 
   // Get unique values for filters
-  const equipmentTypes = Array.from(new Set(equipment?.map(e => e.tipo_equipo).filter(Boolean)));
-  const clients = Array.from(new Set(equipment?.map(e => e.zona_cliente).filter(Boolean)));
+  const equipmentTypes = Array.from(new Set(equipment?.map(e => e.tipo_equipo).filter(Boolean))) as string[];
+  const clients = Array.from(new Set(equipment?.map(e => e.zona_cliente).filter(Boolean))) as string[];
 
   // Filter equipment
-  const filteredEquipment = equipment?.filter(item => {
-    const matchesSearch = search === "" || item.numero_equipo_tag?.toLowerCase().includes(search.toLowerCase()) || item.form_name?.toLowerCase().includes(search.toLowerCase());
+  const filteredEquipment = equipment?.filter((item: Equipment) => {
+    const matchesSearch = search === "" || 
+      item.numero_equipo_tag?.toLowerCase().includes(search.toLowerCase()) || 
+      item.form_name?.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === "all" || item.tipo_equipo === typeFilter;
     const matchesClient = clientFilter === "all" || item.zona_cliente === clientFilter;
     return matchesSearch && matchesType && matchesClient;
@@ -96,11 +90,22 @@ const Index = () => {
         </div>
 
         {/* Equipment Grid */}
-        {isLoading ? <div className="text-center py-12">
+        {isLoading ? (
+          <div className="text-center py-12">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
             <p className="mt-4 text-muted-foreground">Cargando equipos...</p>
-          </div> : <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredEquipment?.map(item => <Card key={item.id} className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card/90 backdrop-blur-sm border-primary/20">
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-500 text-lg">Error al cargar equipos</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {error instanceof Error ? error.message : 'Error desconocido'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredEquipment?.map((item: Equipment) => (
+              <Card key={item.id} className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card/90 backdrop-blur-sm border-primary/20">
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -110,33 +115,45 @@ const Index = () => {
                     {item.marca_modelo && <p className="text-sm font-medium text-primary">{item.marca_modelo}</p>}
                   </div>
 
-                  {item.zona_cliente && <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {item.zona_cliente && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" />
                       <span>{item.zona_cliente}</span>
-                    </div>}
+                    </div>
+                  )}
 
-                  {item.assigned_date && <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {item.assigned_date && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       <span>{new Date(item.assigned_date).toLocaleDateString('es')}</span>
-                    </div>}
+                    </div>
+                  )}
 
-                  {item.ejecutado_por && <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {item.ejecutado_por && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4" />
                       <span>Por: {item.ejecutado_por}</span>
-                    </div>}
+                    </div>
+                  )}
 
-                  {item.servicio && <div className="pt-3 border-t">
+                  {item.servicio && (
+                    <div className="pt-3 border-t">
                       <p className="text-sm">
                         <span className="font-medium">Servicio:</span> {item.servicio}
                       </p>
-                    </div>}
+                    </div>
+                  )}
 
-                  {item.form_name && <div className="text-xs text-muted-foreground">
+                  {item.form_name && (
+                    <div className="text-xs text-muted-foreground">
                       Formulario: {item.form_name}
-                    </div>}
+                    </div>
+                  )}
                 </div>
-              </Card>)}
-          </div>}
+              </Card>
+            ))}
+          </div>
+        )}
 
         {!isLoading && filteredEquipment?.length === 0 && <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No se encontraron equipos</p>
