@@ -36,11 +36,16 @@ export default async function handler(req: any, res: any) {
         const data = row.data || {}
         
         // Get required field (try multiple variations)
-        const numero_equipo_tag = data['Numero de Equipo (Tag)'] || 
-                                 data['Numero de Equipo'] ||
-                                 data['Tag'] ||
-                                 data.tag ||
-                                 row.tag
+        let numero_equipo_tag = data['Numero de Equipo (Tag)'] || 
+                               data['Numero de Equipo'] ||
+                               data['Tag'] ||
+                               data.tag ||
+                               row.tag
+        
+        // Clean empty strings
+        if (typeof numero_equipo_tag === 'string') {
+          numero_equipo_tag = numero_equipo_tag.trim() || null
+        }
         
         if (!numero_equipo_tag) {
           errors++
