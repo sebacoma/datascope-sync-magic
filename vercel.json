@@ -6,10 +6,5 @@
     "api/test-datascope.ts": {
       "maxDuration": 20
     }
-  },
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "DATASCOPE_BASE_URL": "@datascope_base_url",
-    "DATASCOPE_API_KEY": "@datascope_api_key"
   }
 }
