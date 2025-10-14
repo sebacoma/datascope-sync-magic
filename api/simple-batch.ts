@@ -1,5 +1,6 @@
-// Simplified batch endpoint for Google Apps Script
+// Simplified batch endpoint for Google Apps Script with DataScope integration
 import { PrismaClient } from '@prisma/client'
+import { createDataScopeService } from '../lib/datascope.js'
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -89,11 +90,34 @@ export default async function handler(req: any, res: any) {
         }
 
         processed++
-        results.push({ 
+        const resultEntry: any = { 
           rowNumber: row.rowNumber, 
           id: result.id,
           action: existing ? 'updated' : 'created'
-        })
+        }
+
+        // Process DataScope "Otro" fields
+        try {
+          const dataScopeService = createDataScopeService()
+          const dataScopeResult = await dataScopeService.processOtherFields(data)
+          
+          if (dataScopeResult.processed > 0) {
+            console.log(`🔄 DataScope: ${dataScopeResult.successful}/${dataScopeResult.processed} fields processed`)
+            
+            // Add DataScope info to result
+            resultEntry.datascope = {
+              processed: dataScopeResult.processed,
+              successful: dataScopeResult.successful,
+              errors: dataScopeResult.errors
+            }
+          }
+        } catch (dataScopeError) {
+          console.error('DataScope processing error:', dataScopeError)
+          // Don't fail the main operation if DataScope fails
+          resultEntry.datascope_error = 'Failed to process DataScope fields'
+        }
+
+        results.push(resultEntry)
 
       } catch (rowError) {
         errors++
