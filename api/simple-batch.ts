@@ -37,8 +37,8 @@ export default async function handler(req: any, res: any) {
         
         // Get equipment tag components
         const area = data['Area'] || null
-        const tipoEquipo = data['Tipo de Equipo'] || null  
-        const numeroEquipo = data['Numero del Equipo'] || null
+        const tipoEquipo = data['Tipo de Equipo Tag'] || null  
+        const numeroEquipo = data['Numero del Equipo Tag'] || null
 
         let numero_equipo_tag = null
 
