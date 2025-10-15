@@ -35,23 +35,44 @@ export default async function handler(req: any, res: any) {
       try {
         const data = row.data || {}
         
-        // Get equipment tag (try multiple variations, generate fallback if needed)
-        let numero_equipo_tag = data['Numero de Equipo (Tag)'] || 
-                               data['Numero del Equipo'] ||
-                               data['Tag'] ||
-                               data.tag ||
-                               row.tag
-        
+        // Get equipment tag components
+        const area = data['Area'] || null
+        const tipoEquipo = data['Tipo de Equipo'] || null  
+        const numeroEquipo = data['Numero del Equipo'] || null
+
+        let numero_equipo_tag = null
+
+        // First try to get from existing tag field (if manually provided)
+        numero_equipo_tag = data['Numero de Equipo (Tag)'] || 
+                           data['Tag'] ||
+                           row.tag
+
         // Clean empty strings
         if (typeof numero_equipo_tag === 'string') {
           numero_equipo_tag = numero_equipo_tag.trim() || null
         }
+
+        // If no manual tag, try to build from components
+        if (!numero_equipo_tag && area && tipoEquipo && numeroEquipo) {
+          // Clean components
+          const cleanArea = String(area).trim()
+          const cleanTipo = String(tipoEquipo).trim() 
+          const cleanNumero = String(numeroEquipo).trim()
+          
+          if (cleanArea && cleanTipo && cleanNumero) {
+            numero_equipo_tag = `${cleanArea}-${cleanTipo}-${cleanNumero}`
+            console.log(`🏗️ Built tag from components: ${numero_equipo_tag}`)
+          }
+        }
         
-        // Generate fallback tag if missing
+        // Generate fallback tag if still missing
         if (!numero_equipo_tag) {
           const timestamp = new Date().getTime()
           numero_equipo_tag = `AUTO-${row.rowNumber || timestamp}`
+          console.log(`🆔 Generated fallback tag: ${numero_equipo_tag}`)
         }
+
+        console.log(`📋 Tag resolution: Area="${area}" + Tipo="${tipoEquipo}" + Numero="${numeroEquipo}" = "${numero_equipo_tag}"`)
 
         // Prepare equipment data
         const equipmentData = {
