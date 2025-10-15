@@ -52,8 +52,8 @@ export default async function handler(req: any, res: any) {
           numero_equipo_tag = numero_equipo_tag.trim() || null
         }
 
-        // Try to build from components if available (priority over manual tag)
-        if (area && tipoEquipo && numeroEquipo) {
+        // If no manual tag, try to build from components
+        if (!numero_equipo_tag && area && tipoEquipo && numeroEquipo) {
           // Clean components
           const cleanArea = String(area).trim()
           const cleanTipo = String(tipoEquipo).trim() 
@@ -101,13 +101,16 @@ export default async function handler(req: any, res: any) {
           servicio: (data['Servicio'] && data['Servicio'].trim()) || null
         }
 
-        // Upsert in database
-        const existing = await prisma.chestertonEquipment.findFirst({
-          where: {
-            numero_equipo_tag: equipmentData.numero_equipo_tag,
-            assigned_date: equipmentData.assigned_date
-          }
-        })
+        // Upsert in database - only look for existing if we have both tag and date
+        let existing = null
+        if (equipmentData.numero_equipo_tag && equipmentData.assigned_date) {
+          existing = await prisma.chestertonEquipment.findFirst({
+            where: {
+              numero_equipo_tag: equipmentData.numero_equipo_tag,
+              assigned_date: equipmentData.assigned_date
+            }
+          })
+        }
 
         let result
         if (existing) {
