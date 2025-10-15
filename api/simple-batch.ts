@@ -73,6 +73,7 @@ export default async function handler(req: any, res: any) {
         }
 
         console.log(`📋 Tag resolution: Area="${area}" + Tipo="${tipoEquipo}" + Numero="${numeroEquipo}" = "${numero_equipo_tag}"`)
+        console.log(`📦 Raw data received:`, JSON.stringify(data, null, 2))
 
         // Prepare equipment data
         const equipmentData = {
@@ -90,13 +91,14 @@ export default async function handler(req: any, res: any) {
           minutes_to_perform: data.minutes_to_perform ? parseInt(data.minutes_to_perform) : null,
           latitude: data.latitude ? parseFloat(data.latitude) : null,
           longitude: data.longitude ? parseFloat(data.longitude) : null,
-          zona_cliente: data['Zona - Cliente'] || null,
-          ejecutado_por: data['Ejecutado por'] || null,
-          tipo_equipo: data['Tipo de Equipo'] || null,
+          zona_cliente: (data['Zona - Cliente'] && data['Zona - Cliente'].trim()) || null,
+          ejecutado_por: (data['Ejecutado por'] && data['Ejecutado por'].trim()) || null,
+          tipo_equipo: tipoEquipo,
           numero_equipo_tag: numero_equipo_tag.toString().trim(),
-          marca_modelo: data['Marca - Modelo'] || data['Marca'] || null,
-          otro_cliente: data['Otro - Cliente'] || null,
-          servicio: data['Servicio'] || null
+          marca_modelo: (data['Marca - Modelo'] && data['Marca - Modelo'].trim()) || 
+                       (data['Marca'] && data['Marca'].trim()) || null,
+          otro_cliente: (data['Otro - Cliente'] && data['Otro - Cliente'].trim()) || null,
+          servicio: (data['Servicio'] && data['Servicio'].trim()) || null
         }
 
         // Upsert in database
@@ -125,7 +127,14 @@ export default async function handler(req: any, res: any) {
           id: result.id,
           action: existing ? 'updated' : 'created',
           tag: numero_equipo_tag,
-          components: { area, tipoEquipo, numeroEquipo }
+          components: { area, tipoEquipo, numeroEquipo },
+          savedData: {
+            zona_cliente: equipmentData.zona_cliente,
+            ejecutado_por: equipmentData.ejecutado_por,
+            tipo_equipo: equipmentData.tipo_equipo,
+            servicio: equipmentData.servicio,
+            marca_modelo: equipmentData.marca_modelo
+          }
         }
 
         // Process DataScope "Otro" fields
