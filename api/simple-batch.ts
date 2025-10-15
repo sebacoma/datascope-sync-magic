@@ -144,19 +144,43 @@ export default async function handler(req: any, res: any) {
           }
         }
 
-        // Process DataScope "Otro" fields
+        // Process DataScope "Otro" fields and add TAG to list
         try {
           const dataScopeService = createDataScopeService()
+          
+          // Add the constructed TAG to DataScope list
+          let tagProcessed = false
+          if (numero_equipo_tag && !numero_equipo_tag.startsWith('AUTO-')) {
+            try {
+              console.log(`🏷️ Adding TAG to DataScope: ${numero_equipo_tag}`)
+              const tagRequest = {
+                metadata_type: 'L64_4829',
+                newValue: numero_equipo_tag,
+                fieldName: 'Equipment Tag',
+                originalField: 'Equipment Tag (Auto-generated)',
+                sourceData: data
+              }
+              tagProcessed = await dataScopeService.addToList(tagRequest)
+              console.log(`${tagProcessed ? '✅' : '❌'} TAG add result: ${tagProcessed}`)
+            } catch (error) {
+              console.log(`❌ Error adding TAG to DataScope:`, error)
+            }
+          }
+          
+          // Process "Otro" fields
           const dataScopeResult = await dataScopeService.processOtherFields(data)
           
-          if (dataScopeResult.processed > 0) {
-            console.log(`🔄 DataScope: ${dataScopeResult.successful}/${dataScopeResult.processed} fields processed`)
+          console.log(`🔄 DataScope processing:`, JSON.stringify(dataScopeResult, null, 2))
+          
+          if (dataScopeResult.processed > 0 || tagProcessed) {
+            console.log(`🔄 DataScope: ${dataScopeResult.successful}/${dataScopeResult.processed} fields processed, TAG: ${tagProcessed}`)
             
             // Add DataScope info to result
             resultEntry.datascope = {
-              processed: dataScopeResult.processed,
-              successful: dataScopeResult.successful,
-              errors: dataScopeResult.errors
+              processed: dataScopeResult.processed + (tagProcessed ? 1 : 0),
+              successful: dataScopeResult.successful + (tagProcessed ? 1 : 0),
+              errors: dataScopeResult.errors,
+              tagAdded: tagProcessed
             }
           }
         } catch (dataScopeError) {
