@@ -123,7 +123,9 @@ export default async function handler(req: any, res: any) {
         const resultEntry: any = { 
           rowNumber: row.rowNumber, 
           id: result.id,
-          action: existing ? 'updated' : 'created'
+          action: existing ? 'updated' : 'created',
+          tag: numero_equipo_tag,
+          components: { area, tipoEquipo, numeroEquipo }
         }
 
         // Process DataScope "Otro" fields
