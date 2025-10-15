@@ -52,8 +52,8 @@ export default async function handler(req: any, res: any) {
           numero_equipo_tag = numero_equipo_tag.trim() || null
         }
 
-        // If no manual tag, try to build from components
-        if (!numero_equipo_tag && area && tipoEquipo && numeroEquipo) {
+        // Build tag from components if available (priority over manual tag)
+        if (area && tipoEquipo && numeroEquipo) {
           // Clean components
           const cleanArea = String(area).trim()
           const cleanTipo = String(tipoEquipo).trim() 
@@ -63,6 +63,10 @@ export default async function handler(req: any, res: any) {
             numero_equipo_tag = `${cleanArea}-${cleanTipo}-${cleanNumero}`
             console.log(`🏗️ Built tag from components: ${numero_equipo_tag}`)
           }
+        }
+        // Fallback to manual tag if component construction failed
+        else if (!numero_equipo_tag) {
+          // Keep the manual tag that was already retrieved above
         }
         
         // Generate fallback tag if still missing
