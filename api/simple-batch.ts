@@ -97,7 +97,7 @@ export default async function handler(req: any, res: any) {
           longitude: data.longitude ? parseFloat(data.longitude) : null,
           zona_cliente: (data['Zona - Cliente'] && data['Zona - Cliente'].trim()) || null,
           ejecutado_por: (data['Ejecutado por'] && data['Ejecutado por'].trim()) || null,
-          tipo_equipo: tipoEquipo,
+          tipo_equipo: (data['Tipo de Equipo'] && data['Tipo de Equipo'].trim()) || null,
           numero_equipo_tag: numero_equipo_tag.toString().trim(),
           marca_modelo: (data['Marca - Modelo'] && data['Marca - Modelo'].trim()) || 
                        (data['Marca'] && data['Marca'].trim()) || null,
