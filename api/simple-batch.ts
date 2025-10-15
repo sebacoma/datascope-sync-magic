@@ -52,8 +52,8 @@ export default async function handler(req: any, res: any) {
           numero_equipo_tag = numero_equipo_tag.trim() || null
         }
 
-        // If no manual tag, try to build from components
-        if (!numero_equipo_tag && area && tipoEquipo && numeroEquipo) {
+        // Try to build from components if available (priority over manual tag)
+        if (area && tipoEquipo && numeroEquipo) {
           // Clean components
           const cleanArea = String(area).trim()
           const cleanTipo = String(tipoEquipo).trim() 
