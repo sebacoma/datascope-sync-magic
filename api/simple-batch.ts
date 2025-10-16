@@ -99,8 +99,7 @@ export default async function handler(req: any, res: any) {
           ejecutado_por: (data['Ejecutado por'] && data['Ejecutado por'].trim()) || null,
           tipo_equipo: (data['Tipo de Equipo'] && data['Tipo de Equipo'].trim()) || null,
           numero_equipo_tag: numero_equipo_tag.toString().trim(),
-          marca_modelo: (data['Marca - Modelo'] && data['Marca - Modelo'].trim()) || 
-                       (data['Marca'] && data['Marca'].trim()) || null,
+          marca_modelo: (data['Marca - Modelo'] && data['Marca - Modelo'].trim()) || (data['Marca'] && data['Marca'].trim()) || null,
           otro_cliente: (data['Otro - Cliente'] && data['Otro - Cliente'].trim()) || null,
           servicio: (data['Servicio'] && data['Servicio'].trim()) || null
         }
