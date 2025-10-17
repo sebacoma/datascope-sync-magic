@@ -95,9 +95,15 @@ export default async function handler(req: any, res: any) {
           minutes_to_perform: data.minutes_to_perform ? parseInt(data.minutes_to_perform) : null,
           latitude: data.latitude ? parseFloat(data.latitude) : null,
           longitude: data.longitude ? parseFloat(data.longitude) : null,
-          zona_cliente: (data['Zona - Cliente'] && data['Zona - Cliente'].trim()) || null,
-          ejecutado_por: (data['Ejecutado por'] && data['Ejecutado por'].trim()) || null,
-          tipo_equipo: (data['Tipo de Equipo'] && data['Tipo de Equipo'].trim()) || null,
+          zona_cliente: data['Zona - Cliente'] === 'Otro'
+            ? (data['Otro - Cliente'] && data['Otro - Cliente'].trim()) || null
+            : (data['Zona - Cliente'] && data['Zona - Cliente'].trim()) || null,
+          ejecutado_por: data['Ejecutado por'] === 'Otro' 
+            ? (data['Otro - Ejecutado por'] && data['Otro - Ejecutado por'].trim()) || null
+            : (data['Ejecutado por'] && data['Ejecutado por'].trim()) || null,
+          tipo_equipo: data['Tipo de Equipo'] === 'Otro'
+            ? (data['Otro - Tipo de Equipo'] && data['Otro - Tipo de Equipo'].trim()) || null
+            : (data['Tipo de Equipo'] && data['Tipo de Equipo'].trim()) || null,
           numero_equipo_tag: numero_equipo_tag.toString().trim(),
           marca_modelo: (data['Marca - Modelo'] && data['Marca - Modelo'].trim()) || (data['Marca'] && data['Marca'].trim()) || null,
           otro_cliente: (data['Otro - Cliente'] && data['Otro - Cliente'].trim()) || null,
