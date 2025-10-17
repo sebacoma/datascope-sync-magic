@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,6 +7,156 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Tabla de Áreas (códigos para TAG construction)
+model Area {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique // 111, 123, etc.
+  nombre      String
+  descripcion String?
+  activo      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relaciones
+  equipments  Equipment[]
+  
+  @@map("areas")
+}
+
+// Tabla de Tipos de Equipo (códigos para TAG construction)
+model TipoEquipo {
+  id           Int      @id @default(autoincrement())
+  codigo       String   @unique // BBA, VCT, etc.
+  nombre       String   // Bomba Centrifuga Horizontal, etc.
+  categoria    String?
+  descripcion  String?
+  activo       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  
+  // Relaciones
+  equipments   Equipment[]
+  
+  @@map("tipos_equipo")
+}
+
+// Tabla de Ejecutores
+model Ejecutor {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  email       String?
+  telefono    String?
+  activo      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relaciones
+  inspecciones Inspeccion[]
+  
+  @@map("ejecutores")
+}
+
+// Tabla de Clientes/Zonas
+model ClienteZona {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique // "Antofagasta | SQM | Salar del Carmen | LioH L1"
+  cliente     String   // "SQM"
+  zona        String   // "Antofagasta"
+  ubicacion   String   // "Salar del Carmen"
+  detalle     String?  // "LioH L1"
+  activo      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  // Relaciones
+  inspecciones Inspeccion[]
+  
+  @@map("clientes_zonas")
+}
+
+// Tabla principal de Equipos
+model Equipment {
+  id                Int       @id @default(autoincrement())
+  numero_equipo_tag String    @unique
+  numero_del_equipo String?   // Número específico del equipo (256, 123, etc.)
+  
+  // Referencias a catálogos
+  area_id          Int?
+  tipo_equipo_id   Int?
+  
+  // Información del equipo
+  marca_modelo     String?
+  sistema_sellado  String?
+  marca           String?
+  modelo          String?
+  plan_api        String?
+  
+  // Datos técnicos
+  regulador_flujo String?
+  presion         String?
+  flujo           String?
+  temperatura     String?
+  
+  // Metadatos
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  
+  // Relaciones
+  area            Area?     @relation(fields: [area_id], references: [id])
+  tipo_equipo     TipoEquipo? @relation(fields: [tipo_equipo_id], references: [id])
+  inspecciones    Inspeccion[]
+  
+  @@map("equipments")
+}
+
+// Tabla de Inspecciones/Formularios
+model Inspeccion {
+  id                     Int       @id @default(autoincrement())
+  
+  // Referencias
+  equipment_id           Int
+  ejecutor_id            Int?
+  cliente_zona_id        Int?
+  
+  // Datos del formulario DataScope
+  form_id                String?
+  form_name              String?
+  user_name              String?
+  
+  // Fechas
+  created                DateTime?
+  sent                   DateTime?
+  assigned_date          DateTime?
+  assigned_time          String?
+  first_answer          DateTime?
+  last_answer           DateTime?
+  
+  // Ubicación
+  assigned_location      String?
+  assigned_location_code String?
+  latitude              Float?
+  longitude             Float?
+  
+  // Servicio
+  servicio              String?
+  minutes_to_perform    Int?
+  
+  // Otros campos específicos
+  otro_cliente          String?
+  
+  // Metadatos
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+  
+  // Relaciones
+  equipment             Equipment @relation(fields: [equipment_id], references: [id])
+  ejecutor              Ejecutor? @relation(fields: [ejecutor_id], references: [id])
+  cliente_zona          ClienteZona? @relation(fields: [cliente_zona_id], references: [id])
+  
+  @@map("inspecciones")
+}
+
+// Tabla legacy para mantener compatibilidad temporal
 model ChestertonEquipment {
   id                     Int       @id @default(autoincrement())
   created                DateTime? @default(now())
