@@ -19,8 +19,7 @@
     "db:reset": "prisma migrate reset",
     "db:seed": "tsx prisma/seed.ts",
     "vercel-build": "prisma generate && prisma migrate deploy",
-    "docker:build": "docker build -t datascope-sync-magic .",
-    "docker:run": "docker run -p 3000:3000 --env-file .env datascope-sync-magic"
+    "render-deploy": "npm run render-build && npm start"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",

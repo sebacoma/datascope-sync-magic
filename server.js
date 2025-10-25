@@ -24,18 +24,24 @@ const createApiHandler = (handlerPath) => async (req, res) => {
     await handler(req, res)
   } catch (error) {
     console.error(`Error in ${handlerPath}:`, error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: 'Internal server error', details: error.message })
   }
 }
 
-// API Routes
+// API Routes - Only the essential ones
 app.get('/api/health', createApiHandler('./api/health.js'))
 app.get('/api/debug', createApiHandler('./api/debug.js'))
 app.post('/api/simple-batch', createApiHandler('./api/simple-batch.js'))
-app.post('/api/simple-batch-normalized', createApiHandler('./api/simple-batch-normalized.js'))
-app.get('/api/equipment', createApiHandler('./api/equipment/index.js'))
-app.post('/api/equipment/batch', createApiHandler('./api/equipment/batch.js'))
 app.get('/api/test-datascope', createApiHandler('./api/test-datascope.js'))
+
+// Optional routes (with error handling)
+app.post('/api/simple-batch-normalized', (req, res) => {
+  res.status(501).json({ error: 'Normalized endpoint not available yet' })
+})
+
+app.get('/api/equipment', (req, res) => {
+  res.status(501).json({ error: 'Equipment endpoint not available yet' })
+})
 
 // Health check for deployment
 app.get('/_health', (req, res) => {
