@@ -1,21 +1,19 @@
 #!/bin/bash
 # Render build script
 
+set -e  # Exit on any error
+
 echo "🔧 Installing dependencies..."
-npm ci
+npm ci --only=production
 
 echo "📦 Generating Prisma client..."
 npx prisma generate
 
-echo "🔄 Converting TypeScript API files to JavaScript..."
-# Convert .ts files to .js for runtime
-for file in api/*.ts; do
-  if [ -f "$file" ]; then
-    cp "$file" "${file%.ts}.js"
-  fi
-done
-
-echo "🏗️ Building frontend..."
+echo "🏗️ Building frontend with development dependencies..."
+npm install
 npm run build
+
+echo "🧹 Cleaning up dev dependencies..."
+npm prune --production
 
 echo "✅ Build completed successfully!"
