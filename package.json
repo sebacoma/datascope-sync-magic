@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server.js",
+    "render-build": "./render-build.sh",
     "server": "tsx src/server/index.ts",
     "server:dev": "tsx watch src/server/index.ts",
     "db:migrate": "prisma migrate dev",
