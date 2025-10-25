@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "start": "node server.js",
     "server": "tsx src/server/index.ts",
     "server:dev": "tsx watch src/server/index.ts",
     "db:migrate": "prisma migrate dev",
@@ -16,7 +17,9 @@
     "db:generate": "prisma generate",
     "db:reset": "prisma migrate reset",
     "db:seed": "tsx prisma/seed.ts",
-    "vercel-build": "prisma generate && prisma migrate deploy"
+    "vercel-build": "prisma generate && prisma migrate deploy",
+    "docker:build": "docker build -t datascope-sync-magic .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env datascope-sync-magic"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
